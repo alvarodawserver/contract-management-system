@@ -45,6 +45,12 @@ class UserFactory extends Factory
 
     /**
      * Indicate that the model has two-factor authentication configured.
+     *
+     * The users table has no two-factor columns, so this is intentionally a no-op.
+     * It only exists for the Fortify two-factor test, which is skipped while the feature is disabled.
      */
-    public function withTwoFactor(): static {}
+    public function withTwoFactor(): static
+    {
+        return $this;
+    }
 }
