@@ -4,7 +4,6 @@ A web application built during a Web App Development (DAW) internship at the San
 
 > ⚠️ This repository showcases the work developed during the internship. Sensitive data, credentials, and internal configuration have been removed or replaced with mock data for public display.
 
-
 ## Overview
 
 Spanish public institutions manage contracts through an annual contracting plan, where department heads (and employees they delegate to) are responsible for registering, updating, and formalizing contracts before they expire. This project replaced a manual, error-prone process with a centralized system that gives each department visibility and control over its own contracts, while automating the reminders that used to be tracked by hand.
