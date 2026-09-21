@@ -2,6 +2,7 @@
 
 use App\Enums\ContractStatus;
 use App\Models\Contract;
+use App\Models\User;
 
 const COMPLETE = ['amount' => 12000, 'start_date' => '2026-10-01', 'end_date' => '2027-09-30', 'responsible' => 'Acme S.L.'];
 
@@ -28,6 +29,48 @@ test('scopes split contracts by their derived status', function () {
     expect(Contract::pending()->sole()->is($pending))->toBeTrue();
     expect(Contract::lapsed()->sole()->is($lapsed))->toBeTrue();
 });
+
+test('visibleTo keeps every contract for an admin and only the department ones for anyone else', function () {
+    $employee = User::factory()->delegatedEmployee()->create();
+    $admin = User::factory()->admin()->create();
+    $own = Contract::factory()->create(['department_id' => $employee->departmentId()]);
+    Contract::factory()->create();
+
+    expect(Contract::visibleTo($employee)->pluck('id')->all())->toBe([$own->id]);
+    expect(Contract::visibleTo($admin)->count())->toBe(2);
+});
+
+test('visibleTo hides every contract from a user without a department', function () {
+    Contract::factory()->create();
+
+    expect(Contract::visibleTo(User::factory()->create())->count())->toBe(0);
+});
+
+test('matching finds contracts by title or reference ignoring case, and not by responsible', function () {
+    $byTitle = Contract::factory()->create(['title' => 'Renovación del alumbrado']);
+    $byReference = Contract::factory()->create(['title' => 'Limpieza', 'reference' => 'CT-2026-0042']);
+    Contract::factory()->create(['title' => 'Mobiliario', 'responsible' => 'Alumbrados S.A.']);
+
+    expect(Contract::matching('ALUMBRADO')->pluck('id')->all())->toBe([$byTitle->id]);
+    expect(Contract::matching('ct-2026-0042')->pluck('id')->all())->toBe([$byReference->id]);
+});
+
+test('overlapping keeps the contracts whose term touches the period', function (?string $from, ?string $to, int $expected) {
+    Contract::factory()->create(['start_date' => '2026-01-01', 'end_date' => '2026-06-30', 'expected_date' => null]);
+    Contract::factory()->create(['start_date' => '2026-07-01', 'end_date' => '2027-06-30', 'expected_date' => null]);
+    Contract::factory()->create(['start_date' => null, 'end_date' => null, 'expected_date' => '2026-03-15']);
+    Contract::factory()->create(['start_date' => null, 'end_date' => null, 'expected_date' => null]);
+
+    $count = Contract::overlapping($from ? now()->parse($from) : null, $to ? now()->parse($to) : null)->count();
+
+    expect($count)->toBe($expected);
+})->with([
+    'period across the first two contracts' => ['2026-05-01', '2026-08-31', 2],
+    'only a start: the ones that end after it' => ['2026-09-01', null, 1],
+    'only an end: the ones that start before it' => [null, '2026-02-01', 1],
+    'no period keeps everything, even without dates' => [null, null, 4],
+    'expected date stands in while there are no dates' => ['2026-03-01', '2026-03-31', 2],
+]);
 
 test('calculates the duration counting the end date', function (string $start, string $end, array $expected) {
     expect((new Contract(['start_date' => $start, 'end_date' => $end]))->duration)->toBe($expected);

@@ -34,14 +34,14 @@ class ContractSeeder extends Seeder
             ->filter()
             ->values();
 
-        $contracts = collect(range(1, 8))->map(function () use ($department, $users): Contract {
+        $contracts = collect(range(1, 12))->map(function () use ($department, $users): Contract {
             $user = $users->random();
             Auth::setUser($user);
 
             return Contract::factory()->for($department)->for($user, 'creator')->create();
         });
 
-        $contracts->take(2)->each(function (Contract $contract): void {
+        $contracts->take(3)->each(function (Contract $contract): void {
             Auth::setUser($contract->creator);
             $contract->update([
                 'amount' => $contract->expected_amount,
@@ -51,18 +51,18 @@ class ContractSeeder extends Seeder
             ]);
         });
 
-        $contracts->slice(2, 2)->each(function (Contract $contract): void {
+        $contracts->slice(3, 3)->each(function (Contract $contract): void {
             Auth::setUser($contract->creator);
             $contract->update(['expected_amount' => round((float) $contract->expected_amount * 1.1, 2)]);
         });
 
-        $expired = $contracts->get(4);
+        $expired = $contracts->get(6);
         Auth::setUser($expired->creator);
         $expired->update(['formalization_deadline' => now()->subDays(10)]);
         Auth::forgetUser();
         $expired->delete();
 
-        $deleted = $contracts->get(5);
+        $deleted = $contracts->get(7);
         Auth::setUser($deleted->creator);
         $deleted->delete();
     }

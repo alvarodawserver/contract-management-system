@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\RoleSlug;
 use Database\Factories\DepartmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,6 +26,19 @@ class Department extends Model
 {
     /** @use HasFactory<DepartmentFactory> */
     use HasFactory;
+
+    /**
+     * Admins see every department; everyone else only their own.
+     *
+     * @param  Builder<Department>  $query
+     */
+    #[Scope]
+    protected function visibleTo(Builder $query, User $user): void
+    {
+        if (! $user->hasRole(RoleSlug::Admin)) {
+            $query->where('id', $user->departmentId());
+        }
+    }
 
     /**
      * @return HasMany<Employee, $this>

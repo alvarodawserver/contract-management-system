@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ContractStatus;
+use App\Enums\RoleSlug;
 use App\Observers\ContractObserver;
 use Carbon\CarbonInterface;
 use Database\Factories\ContractFactory;
@@ -190,6 +191,51 @@ class Contract extends Model
     protected function lapsed(Builder $query): void
     {
         $query->unformalized()->whereDate('formalization_deadline', '<', today());
+    }
+
+    /**
+     * Admins see every contract; everyone else only those of their own department.
+     *
+     * @param  Builder<Contract>  $query
+     */
+    #[Scope]
+    protected function visibleTo(Builder $query, User $user): void
+    {
+        if (! $user->hasRole(RoleSlug::Admin)) {
+            $query->where('department_id', $user->departmentId());
+        }
+    }
+
+    /**
+     * Keeps the contracts whose term overlaps the given period. While a contract has no
+     * start or end date yet, its expected date stands in so it does not vanish from reports.
+     *
+     * @param  Builder<Contract>  $query
+     */
+    #[Scope]
+    protected function overlapping(Builder $query, ?CarbonInterface $from, ?CarbonInterface $to): void
+    {
+        if ($from !== null) {
+            $query->whereRaw('COALESCE(end_date, start_date, expected_date) >= ?', [$from->toDateString()]);
+        }
+
+        if ($to !== null) {
+            $query->whereRaw('COALESCE(start_date, expected_date) <= ?', [$to->toDateString()]);
+        }
+    }
+
+    /**
+     * Search by title or reference, ignoring case. The conditions are grouped so that they
+     * cannot escape the other filters applied to the same query.
+     *
+     * @param  Builder<Contract>  $query
+     */
+    #[Scope]
+    protected function matching(Builder $query, string $term): void
+    {
+        $query->where(fn (Builder $query) => $query
+            ->whereLike('title', "%{$term}%")
+            ->orWhereLike('reference', "%{$term}%"));
     }
 
     /**

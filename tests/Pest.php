@@ -18,6 +18,13 @@ pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
 
+// The React pages behind these controllers are not written yet, so neither the Vite manifest
+// nor Inertia may require them. Remove this once the pages exist.
+pest()->beforeEach(function () {
+    $this->withoutVite();
+    config(['inertia.testing.ensure_pages_exist' => false]);
+})->in('Feature/Http');
+
 /*
 |--------------------------------------------------------------------------
 | Expectations

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\RoleSlug;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -46,6 +47,19 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function hasRole(RoleSlug $slug): bool
+    {
+        return $this->role?->slug === $slug;
+    }
+
+    /**
+     * The department the user belongs to through their employee record.
+     */
+    public function departmentId(): ?int
+    {
+        return $this->employee?->department_id;
     }
 
     /**
