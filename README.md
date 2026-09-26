@@ -46,7 +46,21 @@ The database seeds itself with a fictional town hall: one admin, three departmen
 
 ## Screenshots
 
-<!-- TODO: dashboard, my contracts, create/edit form, movement history -->
+**Dashboard**, as an admin — summary cards, contracts closest to their deadline, and the full table with quick actions.
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+**My contracts**, as a delegated employee — the same kind of list, scoped to their own department; note how "Formalize" and "Delete" only appear on the contracts they created themselves.
+
+![My contracts](docs/screenshots/my-contracts.png)
+
+**Editing a contract** — every field is optional except the title; a contract becomes _Formalized_ automatically once the amount, both dates and the responsible party are all filled in, with no status field to flip by hand.
+
+![Edit contract](docs/screenshots/edit-contract.png)
+
+**Movement history** of a single contract — every create, edit, delete and restore, with who did it and when.
+
+![Movement history](docs/screenshots/movements.png)
 
 ## Demo Video
 
