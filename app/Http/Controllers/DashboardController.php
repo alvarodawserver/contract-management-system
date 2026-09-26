@@ -64,6 +64,14 @@ class DashboardController extends Controller
                     'code' => $department->code,
                     'contracts' => (int) ($contractsPerDepartment[$department->id] ?? 0),
                 ]),
+            'contracts' => ContractResource::collection(
+                $contracts()
+                    ->with(['department', 'creator'])
+                    ->latest()
+                    ->latest('id')
+                    ->paginate(15)
+                    ->withQueryString(),
+            ),
         ]);
     }
 }

@@ -45,7 +45,6 @@ class ContractResource extends JsonResource
                 'id' => $this->creator->id,
                 'name' => $this->creator->name,
             ]),
-            'movements' => ContractMovementResource::collection($this->whenLoaded('movements')),
             'can' => [
                 'update' => $user->can('update', $this->resource),
                 'delete' => $user->can('delete', $this->resource),

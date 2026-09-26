@@ -1,5 +1,5 @@
-import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { FileText, History, LayoutGrid, Trash2 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -14,37 +14,49 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as contractsIndex } from '@/routes/contracts';
+import { index as trashIndex } from '@/routes/contracts/trash';
+import { index as movementsIndex } from '@/routes/movements';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
+const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
+    const { simulation } = usePage().props;
+    const currentUser = simulation.users.find(
+        (user) => user.id === simulation.current,
+    );
+    // Department heads and admins also get the management-only views: the dashboard and
+    // the cross-contract movement log. A delegated employee sees a contract's own history
+    // from that contract's "View movements" button instead.
+    const isManager =
+        currentUser?.role === 'admin' ||
+        currentUser?.role === 'department_head';
+
+    const mainNavItems: NavItem[] = [
+        {
+            title: 'My contracts',
+            href: contractsIndex(),
+            icon: FileText,
+        },
+        // Everyone can reach the trash: an employee who deleted their own contract by
+        // mistake can restore it themselves, without needing their department head.
+        { title: 'Trash', href: trashIndex(), icon: Trash2 },
+        ...(isManager
+            ? [
+                  { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
+                  { title: 'Movements', href: movementsIndex(), icon: History },
+              ]
+            : []),
+    ];
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href={dashboard()}>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

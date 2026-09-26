@@ -42,7 +42,7 @@ test('applies the permission matrix to a contract', function (string $actor, str
     'head, contract created by the delegate' => ['head', 'own', ['view' => true, 'update' => true, 'delete' => true, 'restore' => true, 'forceDelete' => false]],
     'head, contract of the department' => ['head', 'department', ['view' => true, 'update' => true, 'delete' => true, 'restore' => true, 'forceDelete' => false]],
     'head, contract of another department' => ['head', 'other', ['view' => false, 'update' => false, 'delete' => false, 'restore' => false, 'forceDelete' => false]],
-    'delegate, contract they created' => ['delegate', 'own', ['view' => true, 'update' => true, 'delete' => true, 'restore' => false, 'forceDelete' => false]],
+    'delegate, contract they created' => ['delegate', 'own', ['view' => true, 'update' => true, 'delete' => true, 'restore' => true, 'forceDelete' => false]],
     'delegate, contract created by the head' => ['delegate', 'department', ['view' => true, 'update' => false, 'delete' => false, 'restore' => false, 'forceDelete' => false]],
     'delegate, contract of another department' => ['delegate', 'other', ['view' => false, 'update' => false, 'delete' => false, 'restore' => false, 'forceDelete' => false]],
 ]);
@@ -56,9 +56,9 @@ test('applies the permission matrix to actions that involve no single contract',
 
     expect($actual)->toBe($expected);
 })->with([
-    'admin' => ['admin', ['viewAny' => true, 'create' => true, 'viewTrashed' => true]],
-    'head' => ['head', ['viewAny' => true, 'create' => true, 'viewTrashed' => true]],
-    'delegate' => ['delegate', ['viewAny' => true, 'create' => true, 'viewTrashed' => false]],
+    'admin' => ['admin', ['viewAny' => true, 'create' => true, 'viewTrashed' => true, 'viewMovementLog' => true]],
+    'head' => ['head', ['viewAny' => true, 'create' => true, 'viewTrashed' => true, 'viewMovementLog' => true]],
+    'delegate' => ['delegate', ['viewAny' => true, 'create' => true, 'viewTrashed' => true, 'viewMovementLog' => false]],
 ]);
 
 test('a user without a role or department can do nothing', function () {
@@ -68,5 +68,6 @@ test('a user without a role or department can do nothing', function () {
     expect($user->can('viewAny', Contract::class))->toBeFalse();
     expect($user->can('create', Contract::class))->toBeFalse();
     expect($user->can('viewTrashed', Contract::class))->toBeFalse();
+    expect($user->can('viewMovementLog', Contract::class))->toBeFalse();
     expect($user->can('view', $contract))->toBeFalse();
 });

@@ -171,20 +171,19 @@ describe('store', function () {
 });
 
 describe('show', function () {
-    test('shows a contract with its movements, newest first', function () {
+    test('shows the contract data and what the current user can do with it', function () {
         $employee = User::factory()->delegatedEmployee()->create();
         $this->actingAs($employee);
         $contract = Contract::factory()->create(['department_id' => $employee->departmentId(), 'created_by' => $employee->id]);
-        $contract->update(['title' => 'Nuevo título']);
 
         $this->get(route('contracts.show', $contract))
             ->assertInertia(fn (Assert $page) => $page
                 ->component('contracts/show')
                 ->where('contract.id', $contract->id)
-                ->has('contract.movements', 2)
-                ->where('contract.movements.0.action', 'updated')
-                ->where('contract.movements.0.user.id', $employee->id)
-                ->where('contract.movements.1.action', 'created'));
+                ->where('contract.reference', $contract->reference)
+                ->where('contract.can.update', true)
+                ->where('contract.can.delete', true)
+                ->missing('contract.movements'));
     });
 
     test('forbids a contract of another department', function () {
@@ -234,6 +233,32 @@ describe('update', function () {
         expect($contract->fresh()->title)->toBe('Nuevo título');
         expect($movement->user_id)->toBe($head->id);
         expect($movement->changes['amount']['new'])->toBe('9000.00');
+    });
+
+    test('only touches the fields sent, leaving the rest exactly as they were', function () {
+        $head = User::factory()->departmentHead()->create();
+        $contract = Contract::factory()->create([
+            'department_id' => $head->departmentId(),
+            'type' => 'Servicios',
+            'description' => 'Descripción original',
+            'expected_amount' => 5000,
+        ]);
+
+        // The future "formalize" dialog sends only these four fields.
+        $this->actingAs($head)->put(route('contracts.update', $contract), [
+            'amount' => 12000,
+            'start_date' => '2026-10-01',
+            'end_date' => '2027-09-30',
+            'responsible' => 'Acme S.L.',
+        ]);
+
+        $fresh = $contract->fresh();
+        expect($fresh->amount)->toBe('12000.00');
+        expect($fresh->responsible)->toBe('Acme S.L.');
+        expect($fresh->title)->toBe($contract->title);
+        expect($fresh->type)->toBe('Servicios');
+        expect($fresh->description)->toBe('Descripción original');
+        expect($fresh->expected_amount)->toBe('5000.00');
     });
 
     test('forbids the head of another department', function () {

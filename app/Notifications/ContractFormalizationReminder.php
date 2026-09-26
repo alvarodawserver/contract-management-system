@@ -44,10 +44,11 @@ class ContractFormalizationReminder extends Notification
 
         return (new MailMessage)
             ->subject("Recordatorio: el contrato {$contract->reference} está pendiente de formalizar")
-            ->greeting("Hola, {$notifiable->name}")
-            ->line("El contrato **{$contract->reference} · {$contract->title}** ({$contract->department->name}) sigue sin formalizar.")
-            ->line("Fecha límite para formalizarlo: {$contract->formalization_deadline->format('d/m/Y')} (quedan {$timeLeft}).")
-            ->line("Datos que faltan: {$missing}.")
-            ->line('Si no se formaliza a tiempo, el contrato pasará a la papelera y habrá que restaurarlo para continuar.');
+            ->greeting("Estimado/a {$notifiable->name}:")
+            ->line("Le informamos de que el contrato **{$contract->reference} · {$contract->title}**, perteneciente al departamento de {$contract->department->name}, continúa pendiente de formalización.")
+            ->line("El plazo para formalizarlo finaliza el {$contract->formalization_deadline->format('d/m/Y')} (quedan {$timeLeft}).")
+            ->line("Los datos pendientes de completar son: {$missing}.")
+            ->line('Se le informa que si el contrato no es formalizado a tiempo quedará como inválido y habrá que restaurarlo posteriormente.')
+            ->salutation('Módulo de Contratación');
     }
 }

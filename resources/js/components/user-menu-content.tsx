@@ -1,5 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { LogOut, Settings } from 'lucide-react';
+import { SimulatedUserSwitcher } from '@/components/simulated-user-switcher';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -32,12 +33,12 @@ export function UserMenuContent({ user }: Props) {
                 </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <SimulatedUserSwitcher />
             <DropdownMenuGroup>
                 <DropdownMenuItem asChild>
                     <Link
                         className="block w-full cursor-pointer"
                         href={edit()}
-                        prefetch
                         onClick={cleanup}
                     >
                         <Settings className="mr-2" />

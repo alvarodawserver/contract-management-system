@@ -28,6 +28,22 @@ test('acts as the user remembered in the session', function () {
         ->assertInertia(fn (Assert $page) => $page->where('simulation.current', $employee->id));
 });
 
+test('switching to a delegated employee lands on their contracts, not wherever you were', function () {
+    User::factory()->admin()->create();
+    $employee = User::factory()->delegatedEmployee()->create();
+
+    $this->from(route('dashboard'))
+        ->post(route('simulated-user.store'), ['user_id' => $employee->id])
+        ->assertRedirect(route('contracts.index'));
+});
+
+test('switching to a department head lands on the dashboard', function () {
+    $head = User::factory()->departmentHead()->create();
+
+    $this->post(route('simulated-user.store'), ['user_id' => $head->id])
+        ->assertRedirect(route('dashboard'));
+});
+
 test('rejects a user that does not exist', function () {
     $this->post(route('simulated-user.store'), ['user_id' => 999])
         ->assertSessionHasErrors('user_id');

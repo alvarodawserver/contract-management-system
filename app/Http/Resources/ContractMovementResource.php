@@ -18,6 +18,7 @@ class ContractMovementResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'contract_id' => $this->contract_id,
             'action' => $this->action->value,
             'contract_reference' => $this->contract_reference,
             'changes' => $this->changes,

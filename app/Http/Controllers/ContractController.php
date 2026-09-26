@@ -73,11 +73,7 @@ class ContractController extends Controller
     {
         Gate::authorize('view', $contract);
 
-        $contract->load([
-            'department',
-            'creator',
-            'movements' => fn ($query) => $query->with('user')->latest()->latest('id'),
-        ]);
+        $contract->load(['department', 'creator']);
 
         return Inertia::render('contracts/show', [
             'contract' => ContractResource::make($contract),

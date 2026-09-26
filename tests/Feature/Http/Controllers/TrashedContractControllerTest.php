@@ -5,8 +5,18 @@ use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
 describe('index', function () {
-    test('forbids a delegated employee', function () {
-        $this->actingAs(User::factory()->delegatedEmployee()->create())
+    test('shows a delegated employee only the deleted contracts of their department', function () {
+        $employee = User::factory()->delegatedEmployee()->create();
+        Contract::factory()->count(2)->create(['department_id' => $employee->departmentId()])->each->delete();
+        Contract::factory()->create()->delete();
+        Contract::factory()->create(['department_id' => $employee->departmentId()]);
+
+        $this->actingAs($employee)->get(route('contracts.trash.index'))
+            ->assertInertia(fn (Assert $page) => $page->component('contracts/trash')->has('contracts.data', 2));
+    });
+
+    test('forbids a user without a role or department', function () {
+        $this->actingAs(User::factory()->create())
             ->get(route('contracts.trash.index'))
             ->assertForbidden();
     });
@@ -51,9 +61,20 @@ describe('restore', function () {
         expect($contract->fresh()->trashed())->toBeFalse();
     });
 
-    test('forbids a delegated employee', function () {
+    test('lets a delegated employee restore a contract they deleted themselves', function () {
         $employee = User::factory()->delegatedEmployee()->create();
         $contract = Contract::factory()->create(['department_id' => $employee->departmentId(), 'created_by' => $employee->id]);
+        $contract->delete();
+
+        $this->actingAs($employee)->patch(route('contracts.restore', $contract))
+            ->assertRedirect(route('contracts.show', $contract));
+
+        expect($contract->fresh()->trashed())->toBeFalse();
+    });
+
+    test('forbids a delegated employee from restoring a contract created by someone else', function () {
+        $employee = User::factory()->delegatedEmployee()->create();
+        $contract = Contract::factory()->create(['department_id' => $employee->departmentId()]);
         $contract->delete();
 
         $this->actingAs($employee)->patch(route('contracts.restore', $contract))->assertForbidden();

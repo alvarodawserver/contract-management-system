@@ -45,15 +45,31 @@ class ContractPolicy
         return $this->update($user, $contract);
     }
 
+    /**
+     * The trash follows the same visibility as the contract list itself: an employee who
+     * deleted their own contract by mistake shouldn't have to ask their head to see it.
+     */
     public function viewTrashed(User $user): bool
     {
-        return $user->hasRole(RoleSlug::Admin) || $user->hasRole(RoleSlug::DepartmentHead);
+        return $this->viewAny($user);
     }
 
+    /**
+     * The cross-contract movement log is a management view, like the trash: a delegated
+     * employee already sees the history of their own contracts from "View movements".
+     */
+    public function viewMovementLog(User $user): bool
+    {
+        return $user->isManager();
+    }
+
+    /**
+     * Whoever could delete a contract can also restore it: an employee their own,
+     * a head or admin anything in scope.
+     */
     public function restore(User $user, Contract $contract): bool
     {
-        return $user->hasRole(RoleSlug::Admin)
-            || ($user->hasRole(RoleSlug::DepartmentHead) && $this->belongsToUserDepartment($user, $contract));
+        return $this->update($user, $contract);
     }
 
     public function forceDelete(User $user, Contract $contract): bool

@@ -21,6 +21,6 @@ class UpdateContractRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->contractRules();
+        return $this->contractRules(partial: true);
     }
 }

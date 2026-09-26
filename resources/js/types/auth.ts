@@ -12,3 +12,22 @@ export type User = {
 export type Auth = {
     user: User;
 };
+
+export type RoleSlug = 'admin' | 'department_head' | 'delegated_employee';
+
+export type SimulatedUser = {
+    id: number;
+    name: string;
+    role: RoleSlug | null;
+    role_label: string | null;
+    department: string | null;
+};
+
+/**
+ * Who the app is currently acting as, and who the demo selector can switch to.
+ * Shared with every page by HandleInertiaRequests.
+ */
+export type Simulation = {
+    current: number | null;
+    users: SimulatedUser[];
+};

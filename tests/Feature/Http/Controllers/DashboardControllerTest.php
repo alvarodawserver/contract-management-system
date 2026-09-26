@@ -22,11 +22,11 @@ test('counts the contracts by derived status', function () {
 });
 
 test('shows a user only the figures of their department', function () {
-    $employee = User::factory()->delegatedEmployee()->create();
-    Contract::factory()->create(['department_id' => $employee->departmentId()]);
+    $head = User::factory()->departmentHead()->create();
+    Contract::factory()->create(['department_id' => $head->departmentId()]);
     Contract::factory()->count(2)->create();
 
-    $this->actingAs($employee)->get(route('dashboard'))
+    $this->actingAs($head)->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page
             ->where('totals.pending', 1)
             ->has('departments', 1));
@@ -94,6 +94,35 @@ test('counts the contracts of each department', function () {
             && collect($rows)->firstWhere('id', $second->id)['contracts'] === 1));
 });
 
+test('lists every contract within the filtered scope, regardless of status', function () {
+    $admin = User::factory()->admin()->create();
+    Contract::factory()->formalized()->create();
+    Contract::factory()->create();
+
+    $this->actingAs($admin)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page->has('contracts.data', 2));
+});
+
+test('scopes the contract list to the department and period filters', function () {
+    $admin = User::factory()->admin()->create();
+    $department = Department::factory()->create();
+    Contract::factory()->create(['department_id' => $department->id]);
+    Contract::factory()->create();
+
+    $this->actingAs($admin)->get(route('dashboard', ['department_id' => $department->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('contracts.data', 1)
+            ->where('contracts.data.0.department.id', $department->id));
+});
+
+test('tells the client what the user can do with each listed contract', function () {
+    $head = User::factory()->departmentHead()->create();
+    Contract::factory()->create(['department_id' => $head->departmentId()]);
+
+    $this->actingAs($head)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page->where('contracts.data.0.can.update', true));
+});
+
 test('rejects a period that ends before it starts', function () {
     $admin = User::factory()->admin()->create();
 
@@ -101,11 +130,12 @@ test('rejects a period that ends before it starts', function () {
         ->assertSessionHasErrors('to');
 });
 
-test('shows empty figures to a user without a department', function () {
-    Contract::factory()->create();
+test('forbids a delegated employee, who has "My contracts" instead', function () {
+    $employee = User::factory()->delegatedEmployee()->create();
 
-    $this->actingAs(User::factory()->create())->get(route('dashboard'))
-        ->assertInertia(fn (Assert $page) => $page
-            ->where('totals.pending', 0)
-            ->has('departments', 0));
+    $this->actingAs($employee)->get(route('dashboard'))->assertForbidden();
+});
+
+test('forbids a user without a role', function () {
+    $this->actingAs(User::factory()->create())->get(route('dashboard'))->assertForbidden();
 });

@@ -55,6 +55,15 @@ class User extends Authenticatable
     }
 
     /**
+     * A department head or admin: manages more than just their own contracts (the dashboard,
+     * the trash, the cross-contract movement log). A delegated employee is not a manager.
+     */
+    public function isManager(): bool
+    {
+        return $this->hasRole(RoleSlug::Admin) || $this->hasRole(RoleSlug::DepartmentHead);
+    }
+
+    /**
      * The department the user belongs to through their employee record.
      */
     public function departmentId(): ?int

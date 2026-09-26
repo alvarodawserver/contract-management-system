@@ -9,9 +9,13 @@ use Illuminate\Validation\Rule;
 
 class DashboardRequest extends FormRequest
 {
+    /**
+     * The dashboard is a management view: department heads and admins only.
+     * A delegated employee already has their own contracts under "My contracts".
+     */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->isManager();
     }
 
     /**
