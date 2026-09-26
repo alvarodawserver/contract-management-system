@@ -64,7 +64,9 @@ The database seeds itself with a fictional town hall: one admin, three departmen
 
 ## Demo Video
 
-<!-- TODO -->
+A short walkthrough of the full contract lifecycle: creating a contract as a delegated employee, watching it become formalized just by completing its data, formalizing another one from the dashboard, deleting and restoring a contract, and its movement history.
+
+https://github.com/user-attachments/assets/0540e70a-c0f1-4af0-90d4-c3ce180b7596
 
 ## Status
 
